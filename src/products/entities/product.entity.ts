@@ -8,8 +8,8 @@ export class Product {
     @Column()
     title: string;
 
-    @Column()
-    images:string 
+    @Column("text", {array: true, default: []})
+    images:string[]
 
     @Column()
     price:number

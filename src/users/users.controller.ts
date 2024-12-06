@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, RawBody, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, RawBody, Req, UseGuards, UsePipes } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from 'src/lib/guards/auth.guard';
+import { LoginSchema, RegisterSchema } from 'src/lib/userSchema';
+import { ZodValidationPipe } from './user.validationpipe';
 
 export interface User {
     id: number,
@@ -23,17 +24,21 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
     @Get()
-    findAll() {
+    async findAll() {
         return this.usersService.findAll();
     }
 
-    @Get('/auth')
+    @Post('/signin')
+    @UsePipes(new ZodValidationPipe(LoginSchema))
     async findOneByCredentials(@Body() body : {email: string, password: string}): Promise<Auth> {
         const {email, password} = body
         const user = await this.usersService.findOneByCredentials(email, password)
 
+        console.log(await this.usersService.findOneByCredentials(email, password))
+        console.log(email, password)
+
         if (user == null)
-            throw new HttpException('User not found', HttpStatus.FORBIDDEN)
+            throw new HttpException('Incorrect login or password', HttpStatus.FORBIDDEN)
 
         const tokens = await this.usersService.createTokens(user.id)
 
@@ -43,8 +48,8 @@ export class UsersController {
         }
     }
 
-
-    @Post('/auth')
+    @Post('/signup')
+    @UsePipes(new ZodValidationPipe(RegisterSchema))
     async create(@Body() body: User):Promise<Auth> {
 
         const isUserAllreadyExist = await this.usersService.isUserAllreadyExistByEmail(body.email)

@@ -1,4 +1,3 @@
-
 import { Injectable, Inject } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Users } from './user.entity';
@@ -40,7 +39,6 @@ export class UsersService {
     const exp = iat + 60* 60 * 24 * 7;
 
     return {
-      user_id: userId,
       access_token: await new SignJWT({userId})
       .setProtectedHeader({alg: 'HS256', typ: 'JWT'})
       .setExpirationTime( exp  )
